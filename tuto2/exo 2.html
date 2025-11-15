@@ -193,6 +193,10 @@
       color: #555;
     }
   </style>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body>
 
@@ -259,6 +263,17 @@
   <!-- ===== ATTENDANCE PAGE ===== -->
   <section id="attendance">
     <h2>Student Attendance Table</h2>
+     <button id="showReportBtn" style="
+   background:#7a4cd1;
+   color:white;
+   border:none;
+   padding:10px 20px;
+   border-radius:8px;
+   cursor:pointer;
+   margin-bottom:20px;
+   font-size:16px;
+   ">📊 Show Report</button>
+
     <table id="attendanceTable">
       <thead>
         <tr>
@@ -276,6 +291,26 @@
       <tbody id="attendanceBody"></tbody>
     </table>
   </section>
+  <div id="reportSection" style="
+  display:none;
+  margin-top:30px;
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
+">
+
+  <h3 style="text-align:center;color:#7a4cd1;margin-top:0;">
+    Attendance Report
+  </h3>
+
+  <p id="totalStudents"></p>
+  <p id="presentStudents"></p>
+  <p id="participationStudents"></p>
+
+  <canvas id="reportChart" style="margin-top:20px;"></canvas>
+</div>
+
 
   <!-- ===== REPORTS PAGE ===== -->
   <section id="reports">
@@ -454,6 +489,111 @@
         showPage('attendance');
       }
     });
+    // === JQUERY ROW HIGHLIGHT & CLICK EVENT ===
+$(document).on("mouseenter", "#attendanceTable tbody tr", function () {
+  $(this).css("background-color", "#e9ddff");   // highlight on hover
+});
+
+$(document).on("mouseleave", "#attendanceTable tbody tr", function () {
+  $(this).css("background-color", "");           // remove highlight
+});
+
+// === CLICK ROW → SHOW MESSAGE ONLY WHEN NOT CLICKING CHECKBOX ===
+$(document).on("click", "#attendanceTable tbody tr", function (event) {
+
+  // 🛑 BLOCK ANY CLICK IN CHECKBOX CELLS
+  if ($(event.target).is("input[type='checkbox']")) return;
+  if ($(event.target).closest("td").find("input[type='checkbox']").length > 0) return;
+
+  const last = $(this).find("td:nth-child(1)").text();
+  const first = $(this).find("td:nth-child(2)").text();
+  const abs = $(this).find(".absCount").text();
+
+  alert(`Student: ${first} ${last}\nAbsences: ${abs}`);
+});
+
+
+// === JQUERY ROW HIGHLIGHT ===
+$(document).on("mouseenter", "#attendanceTable tbody tr", function () {
+  $(this).css("background-color", "#e9ddff");
+});
+
+$(document).on("mouseleave", "#attendanceTable tbody tr", function () {
+  $(this).css("background-color", "");
+});
+
+// === CLICK ROW → SHOW MESSAGE ONLY WHEN NOT CLICKING CHECKBOX ===
+$(document).on("click", "#attendanceTable tbody tr", function (event) {
+
+  // 🛑 FIX: Stop alert if click is inside a checkbox cell
+  if ($(event.target).closest("td").find("input[type='checkbox']").length > 0) {
+    return; 
+  }
+
+  const last = $(this).find("td:nth-child(1)").text();
+  const first = $(this).find("td:nth-child(2)").text();
+  const abs = $(this).find(".absCount").text();
+
+  alert(`Student: ${first} ${last}\nAbsences: ${abs}`);
+});
+
+ // === SHOW REPORT BUTTON ===
+document.getElementById("showReportBtn").addEventListener("click", function () {
+
+  const rows = document.querySelectorAll("#attendanceTable tbody tr");
+  let total = rows.length;
+  let present = 0;
+  let participated = 0;
+
+  rows.forEach(row => {
+    const attendanceChecks = row.querySelectorAll(".attendance");
+    const participationChecks = row.querySelectorAll(".participation");
+
+    // Student present = at least one attendance checkbox is checked
+    if ([...attendanceChecks].some(chk => chk.checked)) {
+      present++;
+    }
+
+    // Student participated = at least one participation checkbox is checked
+    if ([...participationChecks].some(chk => chk.checked)) {
+      participated++;
+    }
+  });
+
+  // Show results
+  document.getElementById("totalStudents").innerText = `Total Students: ${total}`;
+  document.getElementById("presentStudents").innerText = `Present Students: ${present}`;
+  document.getElementById("participationStudents").innerText = `Students Who Participated: ${participated}`;
+
+  // Reveal the report section
+  document.getElementById("reportSection").style.display = "block";
+
+  // Display chart
+  const ctx = document.getElementById("reportChart").getContext("2d");
+
+  if (window.reportChartInstance) {
+    window.reportChartInstance.destroy(); // prevent overlap
+  }
+
+  window.reportChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Total', 'Present', 'Participated'],
+      datasets: [{
+        data: [total, present, participated],
+        backgroundColor: ['#7a4cd1', '#8f5efc', '#ffc107'],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+});
+
+
   </script>
 
 </body>
