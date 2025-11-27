@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Attendance System</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* GLOBAL */
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-color: #181830;
+      color: #f9f9ff;
+    }
+
+    /* NAVIGATION */
+    nav {
+      background: linear-gradient(90deg, #1e1e36, #2a2a4d);
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-links a {
+      margin: 0 12px;
+      color: #bcbcff;
+      font-size: 16px;
+      text-decoration: none;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 10px #8f8fff;
+    }
+
+    .logout-btn {
+      background-color: #3a3a6a;
+      color: #e0e0ff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background-color: #4d4d80;
+    }
+
+    .logout-btn.clicked {
+      background-color: #c37fdc; /* Purple-red color when clicked */
+      transform: scale(1.05);
+    }
+
+    #navRight {
+      display: flex;
+      align-items: center;
+    }
+
+    /* SECTIONS */
+    section {
+      display: none;
+      padding: 40px 25px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    h1 {
+      color: #a8a8ff;
+      text-align: center;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    h2, h3 {
+      color: #ffffff; /* Reports text now white */
+    }
+
+    /* FORMS */
+    form {
+      background: #22224a;
+      padding: 25px;
+      border-radius: 10px;
+      max-width: 480px;
+      margin: 30px auto;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    }
+
+    form label {
+      display: block;
+      margin-top: 12px;
+      color: #bbb8dc;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-top: 5px;
+      font-size: 15px;
+    }
+
+    input, select {
+      background: #2d2d56;
+      color:  hwb(240 57% 24%);
+    }
+
+    button {
+      background-color: #5b52d1;
+      color: white;
+      font-weight: 500;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #7368f0;
+    }
+
+    /* TABLES */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #202044;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    }
+
+    th, td {
+      border-bottom: 1px solid #39395c;
+      text-align: center;
+      padding: 12px;
+    }
+
+    th {
+      background-color: #2b2b55;
+      color: #ffffff;
+    }
+
+    /* DASHBOARD */
+    .dashboard {
+      padding: 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: #2a2a4a;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      color: #ffffff;
+    }
+
+    .filters {
+      background: #2a2a4a;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .filters label {
+      color: #ffffff;
+    }
+
+    .filters input, .filters select {
+      width: auto;
+      background: #1f1f3f;
+      color: #ffffff;
+      border-radius: 5px;
+      padding: 5px 8px;
+    }
+
+    .filters button {
+      background-color: #5b52d1;
+      font-size: 14px;
+      padding: 5px 14px;
+      border-radius: 5px;
+      margin-left: auto;
+      transition: 0.3s;
+    }
+
+    .filters button:hover {
+      background-color: #746bf7;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    canvas {
+      background-color: #22224a;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .message-box {
+      text-align: center;
+      font-size: 18px;
+      padding: 15px;
+      color: #ffffff;
+    }
+
+    .counter-box {
+      text-align: center;
+      margin-top: 20px;
+      color: hwb(0 100% 0%);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-links">
+      <a onclick="showSection('home')">Home</a>
+      <a onclick="showSection('attendance')">Attendance List</a>
+      <a onclick="showSection('addStudent')">Add Student</a>
+      <a onclick="showSection('reports')">Reports</a>
+    </div>
+    <div id="navRight">
+      <button class="logout-btn" id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- HOME / LOGIN -->
+  <section id="home" class="active">
+    <h1>Welcome to the Student Attendance System</h1>
+    <form id="loginForm">
+      <label for="teacherId">Teacher ID:</label>
+      <input type="text" id="teacherId" required>
+
+      <label for="firstName">First Name:</label>
+      <input type="text" id="firstName" required>
+
+      <label for="lastName">Last Name:</label>
+      <input type="text" id="lastName" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" required>
+
+      <label for="module">Module:</label>
+      <input type="text" id="module" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <div id="loginMessage" class="message-box"></div>
+  </section>
+
+  <!-- ATTENDANCE -->
+  <section id="attendance">
+    <h1>Attendance List</h1>
+    <table id="attendanceTable">
+      <tr>
+        <th>Student ID</th>
+        <th>Last Name</th>
+        <th>First Name</th>
+        <th>Course</th>
+        <th>Session Date</th>
+        <th>Present</th>
+        <th>Participated</th>
+      </tr>
+    </table>
+    <div class="counter-box">
+      <strong>Present:</strong> <span id="presentCount">0</span> |
+      <strong>Participated:</strong> <span id="partCount">0</span>
+    </div>
+  </section>
+
+  <!-- ADD STUDENT -->
+  <section id="addStudent">
+    <h1>Add a New Student</h1>
+    <form id="addStudentForm">
+      <label>Student ID:</label>
+      <input type="text" id="studentId" required>
+
+      <label>Last Name:</label>
+      <input type="text" id="lastNameInput" required>
+
+      <label>First Name:</label>
+      <input type="text" id="firstNameInput" required>
+
+      <label>Course:</label>
+      <input type="text" id="course" required>
+
+      <button type="submit">Add Student</button>
+    </form>
+    <p id="message" class="message-box" style="color:rgb(202, 186, 233);"></p>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="reports">
+    <h1>Reports & Analytics</h1>
+    <div class="dashboard">
+      <div class="cards">
+        <div class="card"><h3>Total Students</h3><p>160</p></div>
+        <div class="card"><h3>Male Students</h3><p>65</p></div>
+        <div class="card"><h3>Female Students</h3><p>95</p></div>
+        <div class="card"><h3>Average Attendance</h3><p>85%</p></div>
+        <div class="card"><h3>Modules</h3><p>6</p></div>
+      </div>
+      <div class="filters">
+        <label>Date range:</label>
+        <input type="month">
+        <label>Module:</label>
+        <select>
+          <option>All</option><option>PAW</option><option>IHM</option><option>GL</option>
+        </select>
+        <button>Apply Filter</button>
+      </div>
+      <div class="charts">
+        <div><h3 style="text-align:center;">Students per Level</h3><canvas id="levelChart"></canvas></div>
+        <div><h3 style="text-align:center;">Grades Distribution</h3><canvas id="gradesChart"></canvas></div>
+        <div><h3 style="text-align:center;">Attendance Trends</h3><canvas id="attendanceChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGOUT MESSAGE -->
+  <section id="logout">
+    <div class="message-box" id="logoutMessage">You have been logged out successfully.</div>
+  </section>
+
+ <script>
+  const sections = document.querySelectorAll('section');
+  const loginForm = document.getElementById('loginForm');
+  const loginMessage = document.getElementById('loginMessage');
+  const logoutBtn = document.querySelector('.logout-btn');
+  let isLoggedIn = false;
+
+  function showSection(id) {
+    if (!isLoggedIn && id !== 'home') {
+      loginMessage.textContent = "Please log in first.";
+      return;
+    }
+    sections.forEach(sec => sec.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const id = document.getElementById('teacherId').value.trim();
+    const fname = document.getElementById('firstName').value.trim();
+    const lname = document.getElementById('lastName').value.trim();
+    const pass = document.getElementById('password').value.trim();
+    const module = document.getElementById('module').value.trim();
+
+    if (id && fname && lname && pass && module) {
+      isLoggedIn = true;
+      localStorage.setItem('teacher', JSON.stringify({ id, fname, lname, module }));
+      loginMessage.textContent = "Login successful. Redirecting...";
+      setTimeout(() => showSection('attendance'), 1500);
+    } else {
+      loginMessage.textContent = "Please fill in all fields.";
+    }
+  });
+
+  function logout() {
+    logoutBtn.style.backgroundColor = "#8b0000"; // red/purple tone
+    logoutBtn.style.color = "#fff";
+    setTimeout(() => {
+      localStorage.clear();
+      isLoggedIn = false;
+      showSection('logout');
+      document.getElementById('logoutMessage').textContent =
+        "You have been logged out. Returning to login...";
+      setTimeout(() => {
+        logoutBtn.style.backgroundColor = "#3a3a6a"; // restore color
+        showSection('home');
+      }, 2000);
+    }, 300);
+  }
+
+  // Attendance logic
+  const table = document.getElementById('attendanceTable');
+  const presentCount = document.getElementById('presentCount');
+  const partCount = document.getElementById('partCount');
+  let totalPresent = 0, totalPart = 0;
+
+  const defaultStudents = [
+    { id: '001', lastName: 'Mousli', firstName: 'Asma', course: 'PAW', sessionDate: '2025-10-24' },
+    { id: '002', lastName: 'Riham', firstName: 'Mohamed', course: 'IHM', sessionDate: '2025-10-24' },
+    { id: '003', lastName: 'Nawal', firstName: 'Messouaf', course: 'GL', sessionDate: '2025-10-24' }
+  ];
+
+  function loadAttendance() {
+    table.innerHTML = `
+      <tr><th>Student ID</th><th>Last Name</th><th>First Name</th><th>Course</th>
+      <th>Session Date</th><th>Present</th><th>Participated</th></tr>`;
+    const savedStudents = JSON.parse(localStorage.getItem('students')) || [];
+    const all = [...defaultStudents, ...savedStudents];
+    all.forEach(s => {
+      const row = table.insertRow();
+      row.innerHTML = `
+        <td>${s.id}</td><td>${s.lastName}</td><td>${s.firstName}</td>
+        <td>${s.course}</td><td>${s.sessionDate}</td>
+        <td><button class="present-btn">Mark</button><span class="status">Absent</span></td>
+        <td><button class="part-btn">Mark</button><span class="status">No</span></td>`;
+    });
+    updateButtonEvents();
+  }
+
+  function updateButtonEvents() {
+    document.querySelectorAll('.present-btn').forEach(btn => {
+      btn.onclick = () => {
+        const status = btn.nextElementSibling;
+        btn.classList.toggle('active');
+        if (btn.classList.contains('active')) { totalPresent++; status.textContent = 'Present'; }
+        else { totalPresent--; status.textContent = 'Absent'; }
+        presentCount.textContent = totalPresent;
+      };
+    });
+
+    document.querySelectorAll('.part-btn').forEach(btn => {
+      btn.onclick = () => {
+        const status = btn.nextElementSibling;
+        btn.classList.toggle('active');
+        if (btn.classList.contains('active')) { totalPart++; status.textContent = 'Yes'; }
+        else { totalPart--; status.textContent = 'No'; }
+        partCount.textContent = totalPart;
+      };
+    });
+  }
+
+  document.getElementById('addStudentForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const student = {
+      id: document.getElementById('studentId').value,
+      lastName: document.getElementById('lastNameInput').value,
+      firstName: document.getElementById('firstNameInput').value,
+      course: document.getElementById('course').value,
+      sessionDate: new Date().toISOString().split('T')[0]
+    };
+    const students = JSON.parse(localStorage.getItem('students')) || [];
+    students.push(student);
+    localStorage.setItem('students', JSON.stringify(students));
+    document.getElementById('message').textContent = 'Student added successfully.';
+    loadAttendance();
+    e.target.reset();
+  });
+
+  // Chart.js default style to white text
+  Chart.defaults.color = '#ffffff';
+  Chart.defaults.font.size = 13;
+
+  new Chart(document.getElementById('levelChart'), {
+    type: 'bar',
+    data: {
+      labels: ['1st Year', '2nd Year', 'ISIL', 'SI'],
+      datasets: [{
+        label: 'Students',
+        data: [450, 300, 160, 80],
+        backgroundColor: ['#7d6bff', '#5a4fcf', '#a590ff', '#8b7eff']
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } } }
+  });
+
+  new Chart(document.getElementById('gradesChart'), {
+    type: 'pie',
+    data: {
+      labels: ['A', 'B', 'C', 'D', 'F'],
+      datasets: [{
+        data: [25, 40, 20, 10, 5],
+        backgroundColor: ['#7d6bff', '#5a4fcf', '#9a8cff', '#c3b9ff', '#3a3a60']
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#fff' } } } }
+  });
+
+  new Chart(document.getElementById('attendanceChart'), {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      datasets: [{
+        label: 'Attendance (%)',
+        data: [75, 80, 70, 60, 70, 90],
+        borderColor: '#7d6bff',
+        backgroundColor: '#5a4fcf55',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } } }
+  });
+
+  loadAttendance();
+</script>

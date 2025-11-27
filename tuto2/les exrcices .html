@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teacher Dashboard — Enhanced</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* Enhanced Highlight animation */
+    @keyframes pulseHighlight {
+      0% { 
+        background-color: #d3f8d3; 
+        transform: scale(1);
+      }
+      50% { 
+        background-color: #b4f5b4; 
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      }
+      100% { 
+        background-color: #d3f8d3; 
+        transform: scale(1);
+      }
+    }
+
+    @keyframes fadeInOut {
+      0% { 
+        opacity: 1;
+        background-color: #e8f5e9;
+      }
+      50% { 
+        opacity: 0.7;
+        background-color: #4caf50;
+        color: white;
+      }
+      100% { 
+        opacity: 1;
+        background-color: #e8f5e9;
+      }
+    }
+
+    @keyframes glowPulse {
+      0% { 
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+      }
+      50% { 
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+      }
+      100% { 
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+      }
+    }
+
+    .excellent-anim { 
+      animation: pulseHighlight 2s infinite ease-in-out, glowPulse 3s infinite ease-in-out;
+    }
+
+    .fade-anim {
+      animation: fadeInOut 2s infinite ease-in-out;
+    }
+
+    /* === GLOBAL === */
+    :root{
+      --primary:#7a4cd1;
+      --accent:#8f5efc;
+      --bg1:linear-gradient(135deg, #f8f5ff, #f1ebff);
+      --success:#28a745;
+      --warning:#ffc107;
+      --danger:#dc3545;
+    }
+    *{box-sizing:border-box}
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg1);
+      margin: 0;
+      padding: 0;
+      color: #2e2e2e;
+      line-height: 1.5;
+    }
+
+    h1, h2 { text-align:center; color:var(--primary); font-weight:600; margin: 8px 0; }
+
+    /* === NAVBAR === */
+    nav {
+      background-color: var(--primary);
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      padding:14px 10px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.08);
+      position:sticky; top:0; z-index:100;
+    }
+    nav button {
+      background:transparent; color:white; border:2px solid transparent;
+      padding:8px 14px; border-radius:24px; cursor:pointer; font-size:14px; font-weight:600;
+      transition:all .18s ease;
+    }
+    nav button:hover { background:white; color:var(--primary); border-color:var(--primary); }
+
+    /* === PAGE LAYOUT === */
+    main { padding:20px 16px 80px; max-width:1200px; margin:0 auto; }
+    section { display:none; padding:10px 6px 30px; animation:fadeIn .4s ease; }
+    section.active { display:block; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+
+    /* === TABLE CENTERING & STYLING === */
+    .table-wrap{ 
+      overflow:auto; 
+      margin:20px auto; 
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    }
+    #attendanceTable {
+      width:100%; 
+      min-width:980px; 
+      border-collapse:collapse; 
+      font-size:14px;
+      background:#fff;
+    }
+    #attendanceTable th, #attendanceTable td {
+      padding:8px 10px; 
+      text-align:center; 
+      border-bottom:1px solid rgba(0,0,0,0.04);
+    }
+    #attendanceTable thead th { 
+      background:#f2eaff; 
+      color:#5e3da1; 
+      font-weight:700; 
+      text-transform:uppercase; 
+      position: sticky;
+      top: 0;
+    }
+    #attendanceTable thead .group { background:#eadcff; font-weight:600; }
+    #attendanceTable tbody tr:hover { background:#faf6ff; }
+
+    /* === BUTTONS === */
+    .btn { 
+      border: none; 
+      padding:8px 14px; 
+      border-radius:8px; 
+      cursor:pointer; 
+      font-weight:600; 
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-primary { background:var(--primary); color:white; }
+    .btn-accent { background:var(--accent); color:white; }
+    .btn-danger { background:var(--danger); color:white; }
+    .btn-green { background:var(--success); color:white; }
+    .btn-warning { background:var(--warning); color:white; }
+
+    /* === FORM === */
+    form.card {
+      background:#fff; 
+      border-radius:12px; 
+      box-shadow:0 6px 20px rgba(0,0,0,0.06);
+      padding:22px; 
+      max-width:640px; 
+      margin:18px auto;
+    }
+    label{ display:block; margin-top:12px; font-weight:700; color:#444; }
+    input, select { 
+      width:100%; 
+      padding:10px; 
+      border:1px solid #ddd; 
+      border-radius:8px; 
+      margin-top:6px; 
+      font-size:14px; 
+    }
+    input:focus { 
+      border-color:var(--accent); 
+      box-shadow:0 0 6px rgba(143,94,252,0.14); 
+      outline:none; 
+    }
+    .error { color:var(--danger); font-size:13px; margin-top:6px; }
+
+    /* === STATUS COLORS - ENHANCED === */
+    .status-green { 
+      background-color: #e8f5e9 !important; 
+      border-left: 4px solid #4caf50;
+    }
+    .status-yellow { 
+      background-color: #fffde7 !important; 
+      border-left: 4px solid #ffc107;
+    }
+    .status-red { 
+      background-color: #ffebee !important; 
+      border-left: 4px solid #f44336;
+    }
+
+    /* REPORT BOX */
+    #reportSection { 
+      margin-top:18px; 
+      background:#fff; 
+      padding:18px; 
+      border-radius:10px; 
+      box-shadow:0 6px 20px rgba(0,0,0,0.06); 
+      max-width:820px; 
+      margin-left:auto; 
+      margin-right:auto; 
+      display:none; 
+    }
+
+    /* Stats Cards */
+    .stats-container {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      min-width: 150px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* Mobile improvements */
+    @media (max-width:780px){
+      nav{ 
+        gap:8px; 
+        padding:10px;
+        flex-wrap: wrap;
+      }
+      #attendanceTable { 
+        min-width:900px; 
+        font-size: 12px;
+      }
+      .stats-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .stat-card {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    /* Checkbox styling */
+    input[type="checkbox"] {
+      width: auto;
+      transform: scale(1.2);
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: var(--success);
+      color: white;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    .toast.error {
+      background: var(--danger);
+    }
+
+    /* Additional styles from second code for search, sort, and charts */
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .sort-info {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      text-align: center;
+      color: #1976d2;
+      font-weight: 600;
+      display: none;
+    }
+    .chart-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin: 30px 0;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 400px;
+      margin: 20px 0;
+    }
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .report-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .report-card:hover {
+      transform: translateY(-5px);
+    }
+    .report-card h3 {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .report-card .number {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+  <!-- libs -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <button onclick="showPage('home')">🏠 Home</button>
+    <button onclick="showPage('addStudent')">➕ Add Student</button>
+    <button onclick="showPage('attendance')">📋 Attendance</button>
+    <button onclick="showPage('reports')">📊 Reports</button>
+  </nav>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="active">
+    <h1 style="text-align:center; color:#7a4cd1; font-weight:600; margin-top:5px;">
+   Welcome to the Attendance Manager
+</h1>
+<p style="text-align:center; color:#555; margin-bottom:20px;">
+  Track, sort, and manage your students' attendance easily.
+</p>
+
+      <h1>Teacher Dashboard</h1>
+      <h2>👩‍🏫 Teacher Information</h2>
+      <form id="teacherForm" class="card" autocomplete="off">
+        <label for="teacherId">Teacher ID</label>
+        <input id="teacherId" type="text" placeholder="Enter your teacher ID" required />
+
+        <label for="teacherLast">Last Name</label>
+        <input id="teacherLast" type="text" placeholder="Enter your last name" required />
+
+        <label for="teacherFirst">First Name</label>
+        <input id="teacherFirst" type="text" placeholder="Enter your first name" required />
+
+        <label for="teacherEmail">Email</label>
+        <input id="teacherEmail" type="email" placeholder="Enter your email" required />
+
+        <label for="teacherModule">Module</label>
+        <input id="teacherModule" type="text" placeholder="Enter module name" required />
+
+        <label for="sessionDate">Session Date</label>
+        <input id="sessionDate" type="date" required />
+
+        <button type="submit" class="btn btn-accent" style="margin-top:16px">Start Attendance</button>
+      </form>
+    </section>
+
+    <!-- ADD STUDENT -->
+    <section id="addStudent">
+      <h2>Add New Student</h2>
+      <form id="studentForm" class="card" novalidate autocomplete="off">
+        <label for="studentId">Student ID</label>
+        <input id="studentId" type="text" placeholder="Enter student ID">
+        <div class="error" id="idError"></div>
+
+        <label for="lastName">Last Name</label>
+        <input id="lastName" type="text" placeholder="Enter last name">
+        <div class="error" id="lastError"></div>
+
+        <label for="firstName">First Name</label>
+        <input id="firstName" type="text" placeholder="Enter first name">
+        <div class="error" id="firstError"></div>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="Enter email">
+        <div class="error" id="emailError"></div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top:16px">Add Student</button>
+      </form>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section id="attendance">
+      <h2>Student Attendance Table</h2>
+
+      <!-- Enhanced Controls -->
+      <div class="controls">
+        <div class="search-box">
+          <input type="text" id="searchBox" placeholder="Search by name...">
+        </div>
+        <button id="sortAbsences" class="btn btn-warning">Sort by Absences ↑</button>
+        <button id="sortParticipation" class="btn btn-warning">Sort by Participation ↓</button>
+        <button id="showReportBtn" class="btn btn-primary">📊 Show Report</button>
+        <button id="exportBtn" class="btn btn-warning">📤 Export Data</button>
+        <button id="highlightBtn" class="btn btn-green">🌟 Highlight Excellent</button>
+        <button id="resetColorsBtn" class="btn btn-danger">🔄 Reset Colors</button>
+      </div>
+
+      <div class="sort-info" id="sortInfo"></div>
+
+      <div class="table-wrap">
+        <table id="attendanceTable">
+          <thead>
+            <tr>
+              <th rowspan="2">Last Name</th>
+              <th rowspan="2">First Name</th>
+              <th rowspan="2">Student ID</th>
+              <th rowspan="2">Email</th>
+              <th class="group" colspan="6">Attendance (S1–S6)</th>
+              <th class="group" colspan="6">Participation (P1–P6)</th>
+              <th rowspan="2">Absences</th>
+              <th rowspan="2">Participation</th>
+              <th rowspan="2">Message</th>
+            </tr>
+            <tr>
+              <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>S6</th>
+              <th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>P6</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="reports">
+      <h2>📊 Attendance Reports</h2>
+      <div id="reportSection">
+        <h3 style="text-align:center;color:var(--primary)">Attendance Summary</h3>
+        
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value" id="totalStudentsStat">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Present Students</div>
+            <div class="stat-value" id="presentStudentsStat">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Participated</div>
+            <div class="stat-value" id="participationStudentsStat">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value" id="attendanceRateStat">0%</div>
+          </div>
+        </div>
+        
+        <canvas id="reportChart" style="max-width:700px; display:block; margin:12px auto;"></canvas>
+
+        <!-- Additional charts -->
+        <div class="chart-container">
+          <h3 style="text-align:center;">Attendance by Session</h3>
+          <div class="chart-wrapper">
+            <canvas id="sessionChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 style="text-align:center;">Student Performance Distribution</h3>
+          <div class="chart-wrapper">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-card">
+            <h3>Excellent (< 3 absences)</h3>
+            <div class="number" id="excellentStudents">0</div>
+          </div>
+          <div class="report-card">
+            <h3>Warning (3-4 absences)</h3>
+            <div class="number" id="warningStudents">0</div>
+          </div>
+          <div class="report-card">
+            <h3>At Risk (5+ absences)</h3>
+            <div class="number" id="riskStudents">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    /* -------------------------
+       Utility & persistence keys
+       ------------------------- */
+    let currentTeacher = null;
+
+    function studentsKey(teacherId){ return `students_${teacherId}`; }
+    function attendanceKey(teacherId, date){ return `attendance_${teacherId}_${date}`; }
+
+    // Toast notification function
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast';
+      if (isError) toast.classList.add('error');
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    /* -------------------------
+       Navigation & Page Management
+       ------------------------- */
+    function showPage(pageId) {
+      // Hide all sections
+      document.querySelectorAll('section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Show the selected section
+      document.getElementById(pageId).classList.add('active');
+      
+      // Special handling for reports page
+      if (pageId === 'reports') {
+        generateReports();
+      }
+      
+      // Special handling for attendance page
+      if (pageId === 'attendance') {
+        loadAttendanceTable();
+      }
+    }
+
+    /* -------------------------
+       Teacher Form Handling
+       ------------------------- */
+    document.getElementById('teacherForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const teacherId = document.getElementById('teacherId').value;
+      const lastName = document.getElementById('teacherLast').value;
+      const firstName = document.getElementById('teacherFirst').value;
+      const email = document.getElementById('teacherEmail').value;
+      const module = document.getElementById('teacherModule').value;
+      const sessionDate = document.getElementById('sessionDate').value;
+      
+      // Validate session date is not in the future
+      const today = new Date().toISOString().split('T')[0];
+      if (sessionDate > today) {
+        showToast('Session date cannot be in the future!', true);
+        return;
+      }
+      
+      currentTeacher = {
+        id: teacherId,
+        lastName: lastName,
+        firstName: firstName,
+        email: email,
+        module: module,
+        sessionDate: sessionDate
+      };
+      
+      // Store teacher info
+      localStorage.setItem('currentTeacher', JSON.stringify(currentTeacher));
+      
+      // Initialize default students for this teacher
+      initializeDefaultStudents(teacherId);
+      
+      showToast('Teacher information saved successfully!');
+      showPage('attendance');
+    });
+
+    /* -------------------------
+       Initialize Default Students - FIXED VERSION
+       ------------------------- */
+    function initializeDefaultStudents(teacherId) {
+      const key = studentsKey(teacherId);
+      const stored = localStorage.getItem(key);
+      
+      if (!stored) {
+        // Default students - only create if none exist
+        const defaultStudents = [
+          { 
+            id: "1001", 
+            lastName: "Mousli", 
+            firstName: "Asma", 
+            email: "mousliasma684@gmail.com", 
+            attendance: Array(6).fill(false), 
+            participation: Array(6).fill(false), 
+            absences: 0, 
+            totalParticipation: 0, 
+            message: '' 
+          },
+          { 
+            id: "1002", 
+            lastName: "Messouaf", 
+            firstName: "Nawal", 
+            email: "messouafnawal@gmail.com", 
+            attendance: Array(6).fill(false), 
+            participation: Array(6).fill(false), 
+            absences: 0, 
+            totalParticipation: 0, 
+            message: '' 
+          },
+          { 
+            id: "1003", 
+            lastName: "Moufouki", 
+            firstName: "Aida", 
+            email: "moufoki_adia@gmail.com", 
+            attendance: Array(6).fill(false), 
+            participation: Array(6).fill(false), 
+            absences: 0, 
+            totalParticipation: 0, 
+            message: '' 
+          }
+        ];
+        // Save default students
+        saveStudents(teacherId, defaultStudents);
+      }
+    }
+
+    /* -------------------------
+       Student Form Handling - FIXED VERSION
+       ------------------------- */
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Clear previous errors
+      document.getElementById('idError').textContent = '';
+      document.getElementById('lastError').textContent = '';
+      document.getElementById('firstError').textContent = '';
+      document.getElementById('emailError').textContent = '';
+      
+      const studentId = document.getElementById('studentId').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      
+      let isValid = true;
+      const idPattern = /^[0-9]+$/;
+      const namePattern = /^[A-Za-zÀ-ÿ\s'-]+$/;
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      // Validation
+      if (!studentId) {
+        document.getElementById('idError').textContent = 'Student ID is required';
+        isValid = false;
+      } else if (!idPattern.test(studentId)) {
+        document.getElementById('idError').textContent = 'ID must be numbers only';
+        isValid = false;
+      }
+      
+      if (!lastName) {
+        document.getElementById('lastError').textContent = 'Last name is required';
+        isValid = false;
+      } else if (!namePattern.test(lastName)) {
+        document.getElementById('lastError').textContent = 'Last name must contain letters only';
+        isValid = false;
+      }
+      
+      if (!firstName) {
+        document.getElementById('firstError').textContent = 'First name is required';
+        isValid = false;
+      } else if (!namePattern.test(firstName)) {
+        document.getElementById('firstError').textContent = 'First name must contain letters only';
+        isValid = false;
+      }
+      
+      if (!email) {
+        document.getElementById('emailError').textContent = 'Email is required';
+        isValid = false;
+      } else if (!emailPattern.test(email)) {
+        document.getElementById('emailError').textContent = 'Invalid email format';
+        isValid = false;
+      }
+      
+      if (!isValid) return;
+      
+      // Check if teacher is set
+      if (!currentTeacher) {
+        const storedTeacher = localStorage.getItem('currentTeacher');
+        if (storedTeacher) {
+          currentTeacher = JSON.parse(storedTeacher);
+        } else {
+          showToast('Please set up teacher information first!', true);
+          showPage('home');
+          return;
+        }
+      }
+      
+      // Create student object with proper structure
+      const student = {
+        id: studentId,
+        lastName: lastName,
+        firstName: firstName,
+        email: email,
+        attendance: Array(6).fill(false), // S1-S6
+        participation: Array(6).fill(false),  // P1-P6 (now as checkboxes)
+        absences: 0,
+        totalParticipation: 0,
+        message: ''
+      };
+      
+      // Get existing students
+      const students = getStudents(currentTeacher.id);
+      
+      // Check for duplicate student ID
+      if (students.some(s => s.id === studentId)) {
+        document.getElementById('idError').textContent = 'Student ID already exists';
+        showToast('Student ID already exists!', true);
+        return;
+      }
+      
+      // Add new student
+      students.push(student);
+      saveStudents(currentTeacher.id, students);
+      
+      // Clear form
+      document.getElementById('studentForm').reset();
+      
+      // Show success message
+      showToast(`Student "${firstName} ${lastName}" added successfully!`);
+      
+      // Add the new student to the attendance table without reloading the page
+      addStudentToTable(student, students.length - 1);
+    });
+
+    /* -------------------------
+       Add Student to Table Without Reloading
+       ------------------------- */
+    function addStudentToTable(student, index) {
+      const tbody = document.getElementById('attendanceBody');
+      
+      // Create new row
+      const row = document.createElement('tr');
+      
+      // Calculate absences and total participation
+      student.absences = student.attendance.filter(a => !a).length;
+      student.totalParticipation = student.participation.filter(p => p).length;
+      
+      // Determine status and message
+      if (student.absences < 3) {
+        student.message = 'Good attendance – Excellent participation';
+        row.classList.add('status-green');
+      } else if (student.absences <= 4) {
+        student.message = 'Warning – attendance low – You need to participate more';
+        row.classList.add('status-yellow');
+      } else {
+        student.message = 'Excluded – too many absences – You need to participate more';
+        row.classList.add('status-red');
+      }
+      
+      // Build attendance checkboxes
+      let attendanceCells = '';
+      for (let i = 0; i < 6; i++) {
+        attendanceCells += `
+          <td>
+            <input type="checkbox" data-student-index="${index}" data-session="${i}" 
+                   ${student.attendance[i] ? 'checked' : ''}>
+          </td>`;
+      }
+      
+      // Build participation checkboxes (changed from selects)
+      let participationCells = '';
+      for (let i = 0; i < 6; i++) {
+        participationCells += `
+          <td>
+            <input type="checkbox" data-student-index="${index}" data-participation="${i}" 
+                   ${student.participation[i] ? 'checked' : ''}>
+          </td>`;
+      }
+      
+      row.innerHTML = `
+        <td>${student.lastName}</td>
+        <td>${student.firstName}</td>
+        <td>${student.id}</td>
+        <td>${student.email}</td>
+        ${attendanceCells}
+        ${participationCells}
+        <td>${student.absences}</td>
+        <td>${student.totalParticipation}</td>
+        <td>${student.message}</td>
+      `;
+      
+      // Add the new row to the table
+      tbody.appendChild(row);
+      
+      // Add event listeners for the new row's checkboxes
+      row.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+          if (e.target.dataset.session !== undefined) {
+            handleAttendanceChange(e);
+          } else {
+            handleParticipationChange(e);
+          }
+        });
+      });
+      
+      // Switch to attendance page to show the new student
+      showPage('attendance');
+    }
+
+    /* -------------------------
+       Student Data Management - FIXED VERSION
+       ------------------------- */
+    function getStudents(teacherId) {
+      const key = studentsKey(teacherId);
+      const stored = localStorage.getItem(key);
+      
+      if (stored) {
+        return JSON.parse(stored);
+      } else {
+        // Return empty array - default students will be created when teacher is set up
+        return [];
+      }
+    }
+
+    function saveStudents(teacherId, students) {
+      const key = studentsKey(teacherId);
+      localStorage.setItem(key, JSON.stringify(students));
+    }
+
+    /* -------------------------
+       Attendance Table Management
+       ------------------------- */
+    function loadAttendanceTable() {
+      if (!currentTeacher) {
+        const storedTeacher = localStorage.getItem('currentTeacher');
+        if (storedTeacher) {
+          currentTeacher = JSON.parse(storedTeacher);
+        } else {
+          showToast('Please set up teacher information first!', true);
+          showPage('home');
+          return;
+        }
+      }
+      
+      const students = getStudents(currentTeacher.id);
+      const tbody = document.getElementById('attendanceBody');
+      tbody.innerHTML = '';
+      
+      if (students.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="20" style="text-align: center; padding: 20px; color: #666;">No students found. Please set up teacher information first.</td>`;
+        tbody.appendChild(row);
+        return;
+      }
+      
+      students.forEach((student, index) => {
+        const row = document.createElement('tr');
+        
+        // Calculate absences and total participation
+        student.absences = student.attendance.filter(a => !a).length;
+        student.totalParticipation = student.participation.filter(p => p).length;
+        
+        // Determine status and message
+        if (student.absences < 3) {
+          student.message = 'Good attendance – Excellent participation';
+          row.classList.add('status-green');
+        } else if (student.absences <= 4) {
+          student.message = 'Warning – attendance low – You need to participate more';
+          row.classList.add('status-yellow');
+        } else {
+          student.message = 'Excluded – too many absences – You need to participate more';
+          row.classList.add('status-red');
+        }
+        
+        // Build attendance checkboxes
+        let attendanceCells = '';
+        for (let i = 0; i < 6; i++) {
+          attendanceCells += `
+            <td>
+              <input type="checkbox" data-student-index="${index}" data-session="${i}" 
+                     ${student.attendance[i] ? 'checked' : ''}>
+            </td>`;
+        }
+        
+        // Build participation checkboxes (changed from selects)
+        let participationCells = '';
+        for (let i = 0; i < 6; i++) {
+          participationCells += `
+            <td>
+              <input type="checkbox" data-student-index="${index}" data-participation="${i}" 
+                     ${student.participation[i] ? 'checked' : ''}>
+            </td>`;
+        }
+        
+        row.innerHTML = `
+          <td>${student.lastName}</td>
+          <td>${student.firstName}</td>
+          <td>${student.id}</td>
+          <td>${student.email}</td>
+          ${attendanceCells}
+          ${participationCells}
+          <td>${student.absences}</td>
+          <td>${student.totalParticipation}</td>
+          <td>${student.message}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      // Add event listeners for checkboxes
+      tbody.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+          if (e.target.dataset.session !== undefined) {
+            handleAttendanceChange(e);
+          } else {
+            handleParticipationChange(e);
+          }
+        });
+      });
+      
+      // Update students data with calculated values
+      saveStudents(currentTeacher.id, students);
+    }
+
+    function handleAttendanceChange(e) {
+      const studentIndex = parseInt(e.target.dataset.studentIndex);
+      const sessionIndex = parseInt(e.target.dataset.session);
+      const isPresent = e.target.checked;
+      
+      const students = getStudents(currentTeacher.id);
+      students[studentIndex].attendance[sessionIndex] = isPresent;
+      saveStudents(currentTeacher.id, students);
+      
+      // Reload table to update calculated values
+      loadAttendanceTable();
+    }
+
+    function handleParticipationChange(e) {
+      const studentIndex = parseInt(e.target.dataset.studentIndex);
+      const participationIndex = parseInt(e.target.dataset.participation);
+      const participated = e.target.checked;
+      
+      const students = getStudents(currentTeacher.id);
+      students[studentIndex].participation[participationIndex] = participated;
+      saveStudents(currentTeacher.id, students);
+      
+      // Reload table to update calculated values
+      loadAttendanceTable();
+    }
+
+    /* -------------------------
+       Attendance Controls
+       ------------------------- */
+    let sortAbsencesAsc = true;
+    let sortParticipationAsc = false;
+
+    document.getElementById('sortAbsences').addEventListener('click', function() {
+      sortStudentsByAbsences();
+      sortAbsencesAsc = !sortAbsencesAsc;
+      this.textContent = `Sort by Absences ${sortAbsencesAsc ? '↑' : '↓'}`;
+    });
+
+    document.getElementById('sortParticipation').addEventListener('click', function() {
+      sortStudentsByParticipation();
+      sortParticipationAsc = !sortParticipationAsc;
+      this.textContent = `Sort by Participation ${sortParticipationAsc ? '↑' : '↓'}`;
+    });
+
+    document.getElementById('showReportBtn').addEventListener('click', function() {
+      showPage('reports');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function() {
+      exportData();
+    });
+
+    document.getElementById('highlightBtn').addEventListener('click', function() {
+      highlightExcellentStudents();
+    });
+
+    document.getElementById('resetColorsBtn').addEventListener('click', function() {
+      resetRowColors();
+    });
+
+    document.getElementById('searchBox').addEventListener('input', function() {
+      filterStudents(this.value);
+    });
+
+    function sortStudentsByAbsences() {
+      const students = getStudents(currentTeacher.id);
+      students.sort((a, b) => {
+        return sortAbsencesAsc ? a.absences - b.absences : b.absences - a.absences;
+      });
+      saveStudents(currentTeacher.id, students);
+      loadAttendanceTable();
+      
+      document.getElementById('sortInfo').textContent = 
+        `Sorted by Absences ${sortAbsencesAsc ? 'Ascending' : 'Descending'}`;
+      document.getElementById('sortInfo').style.display = 'block';
+    }
+
+    function sortStudentsByParticipation() {
+      const students = getStudents(currentTeacher.id);
+      students.sort((a, b) => {
+        return sortParticipationAsc ? 
+          a.totalParticipation - b.totalParticipation : 
+          b.totalParticipation - a.totalParticipation;
+      });
+      saveStudents(currentTeacher.id, students);
+      loadAttendanceTable();
+      
+      document.getElementById('sortInfo').textContent = 
+        `Sorted by Participation ${sortParticipationAsc ? 'Ascending' : 'Descending'}`;
+      document.getElementById('sortInfo').style.display = 'block';
+    }
+
+    function filterStudents(searchTerm) {
+      const rows = document.querySelectorAll('#attendanceBody tr');
+      const searchLower = searchTerm.toLowerCase();
+      
+      rows.forEach(row => {
+        const nameCells = row.querySelectorAll('td:nth-child(1), td:nth-child(2)');
+        const nameText = Array.from(nameCells).map(cell => cell.textContent.toLowerCase()).join(' ');
+        
+        if (nameText.includes(searchLower)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    /* -------------------------
+       Enhanced Highlight Function with Multiple Animations
+       ------------------------- */
+    let currentAnimationType = 'pulse';
+    
+    function highlightExcellentStudents() {
+      const rows = document.querySelectorAll('#attendanceBody tr');
+      let highlightedCount = 0;
+      
+      // Cycle through animation types
+      const animationTypes = ['pulse', 'fade', 'glow'];
+      const currentIndex = animationTypes.indexOf(currentAnimationType);
+      currentAnimationType = animationTypes[(currentIndex + 1) % animationTypes.length];
+      
+      rows.forEach(row => {
+        const absencesCell = row.querySelector('td:nth-last-child(3)');
+        if (absencesCell && parseInt(absencesCell.textContent) < 3) {
+          // Remove all animation classes first
+          row.classList.remove('excellent-anim', 'fade-anim');
+          
+          // Add the current animation type
+          if (currentAnimationType === 'pulse') {
+            row.classList.add('excellent-anim');
+          } else if (currentAnimationType === 'fade') {
+            row.classList.add('fade-anim');
+          } else if (currentAnimationType === 'glow') {
+            row.classList.add('excellent-anim'); // glow is combined with pulse
+          }
+          
+          highlightedCount++;
+        }
+      });
+      
+      const animationNames = {
+        'pulse': 'Pulse & Scale',
+        'fade': 'Fade In/Out', 
+        'glow': 'Glow Effect'
+      };
+      
+      showToast(`🌟 ${highlightedCount} excellent students highlighted with ${animationNames[currentAnimationType]}!`);
+    }
+
+    function resetRowColors() {
+      const rows = document.querySelectorAll('#attendanceBody tr');
+      rows.forEach(row => {
+        row.classList.remove('excellent-anim', 'fade-anim');
+      });
+      showToast('All animations reset!');
+    }
+
+    function exportData() {
+      if (!currentTeacher) return;
+      
+      const students = getStudents(currentTeacher.id);
+      const csvContent = convertToCSV(students);
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `attendance_${currentTeacher.sessionDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showToast('Data exported successfully!');
+    }
+
+    function convertToCSV(students) {
+      const headers = ['Last Name', 'First Name', 'Student ID', 'Email', 'Absences', 'Total Participation', 'Status'];
+      
+      // Add session and participation headers
+      for (let i = 1; i <= 6; i++) headers.push(`S${i}`);
+      for (let i = 1; i <= 6; i++) headers.push(`P${i}`);
+      
+      let csv = headers.join(',') + '\n';
+      
+      students.forEach(student => {
+        const row = [
+          student.lastName,
+          student.firstName,
+          student.id,
+          student.email,
+          student.absences,
+          student.totalParticipation,
+          student.message
+        ];
+        
+        // Add attendance data
+        student.attendance.forEach(att => row.push(att ? 'Present' : 'Absent'));
+        
+        // Add participation data
+        student.participation.forEach(part => row.push(part ? 'Yes' : 'No'));
+        
+        csv += row.map(field => `"${field}"`).join(',') + '\n';
+      });
+      
+      return csv;
+    }
+
+    /* -------------------------
+       Enhanced Reports Generation
+       ------------------------- */
+    function generateReports() {
+      if (!currentTeacher) {
+        const storedTeacher = localStorage.getItem('currentTeacher');
+        if (storedTeacher) {
+          currentTeacher = JSON.parse(storedTeacher);
+        } else {
+          document.getElementById('reportSection').style.display = 'none';
+          showToast('Please set up teacher information first!', true);
+          return;
+        }
+      }
+      
+      const students = getStudents(currentTeacher.id);
+      
+      if (students.length === 0) {
+        document.getElementById('reportSection').style.display = 'none';
+        showToast('No student data available for reports', true);
+        return;
+      }
+      
+      document.getElementById('reportSection').style.display = 'block';
+      
+      // Calculate statistics - FIXED VERSION
+      const totalStudents = students.length;
+      
+      // Count students marked as present (attended at least one session)
+      const presentStudents = students.filter(student => 
+        student.attendance.some(session => session === true)
+      ).length;
+      
+      // Count students marked as participated (participation score > 0)
+      const participationStudents = students.filter(student => 
+        student.totalParticipation > 0
+      ).length;
+      
+      const attendanceRate = totalStudents > 0 ? ((presentStudents / totalStudents) * 100).toFixed(1) : 0;
+      
+      // Update stat cards
+      document.getElementById('totalStudentsStat').textContent = totalStudents;
+      document.getElementById('presentStudentsStat').textContent = presentStudents;
+      document.getElementById('participationStudentsStat').textContent = participationStudents;
+      document.getElementById('attendanceRateStat').textContent = attendanceRate + '%';
+      
+      // Calculate performance categories
+      const excellent = students.filter(s => s.absences < 3).length;
+      const warning = students.filter(s => s.absences >= 3 && s.absences <= 4).length;
+      const risk = students.filter(s => s.absences >= 5).length;
+      
+      document.getElementById('Good attendance – Excellent participation').textContent = excellent;
+      document.getElementById('Warning – attendance low – You need to participate more').textContent = warning;
+      document.getElementById('Excluded – too many absences – You need to participate more').textContent = risk;
+      
+      // Generate charts
+      generateMainChart(totalStudents, presentStudents, participationStudents);
+      generateSessionChart(students);
+      generatePerformanceChart(excellent, warning, risk);
+    }
+
+    /* -------------------------
+       Enhanced Main Chart - Shows Total, Present, and Participated
+       ------------------------- */
+    function generateMainChart(totalStudents, presentStudents, participationStudents) {
+      const ctx = document.getElementById('reportChart').getContext('2d');
+      
+      // Destroy existing chart if it exists
+      if (window.mainChart) {
+        window.mainChart.destroy();
+      }
+      
+      window.mainChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Total Students', 'Present Students', 'Participated Students'],
+          datasets: [{
+            label: 'Number of Students',
+            data: [totalStudents, presentStudents, participationStudents],
+            backgroundColor: [
+              'rgba(122, 76, 209, 0.7)',
+              'rgba(40, 167, 69, 0.7)',
+              'rgba(255, 193, 7, 0.7)'
+            ],
+            borderColor: [
+              'rgb(122, 76, 209)',
+              'rgb(40, 167, 69)',
+              'rgb(255, 193, 7)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            title: {
+              display: true,
+              text: 'Student Attendance Overview',
+              font: {
+                size: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.raw}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Number of Students'
+              },
+              ticks: {
+                precision: 0
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Student Categories'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function generateSessionChart(students) {
+      const ctx = document.getElementById('sessionChart').getContext('2d');
+      
+      // Calculate attendance per session
+      const sessionAttendance = Array(6).fill(0);
+      students.forEach(student => {
+        student.attendance.forEach((present, index) => {
+          if (present) sessionAttendance[index]++;
+        });
+      });
+
+      // Calculate participation per session
+      const sessionParticipation = Array(6).fill(0);
+      students.forEach(student => {
+        student.participation.forEach((participated, index) => {
+          if (participated) sessionParticipation[index]++;
+        });
+      });
+      
+      // Destroy existing chart if it exists
+      if (window.sessionChart) {
+        window.sessionChart.destroy();
+      }
+      
+      window.sessionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5', 'Session 6'],
+          datasets: [
+            {
+              label: 'Attendance',
+              data: sessionAttendance,
+              backgroundColor: '#7a4cd1',
+              borderColor: '#5e3da1',
+              borderWidth: 1
+            },
+            {
+              label: 'Participation',
+              data: sessionParticipation,
+              backgroundColor: '#28a745',
+              borderColor: '#1e7e34',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: students.length,
+              title: {
+                display: true,
+                text: 'Number of Students'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Sessions'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function generatePerformanceChart(excellent, warning, risk) {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      
+      // Destroy existing chart if it exists
+      if (window.performanceChart) {
+        window.performanceChart.destroy();
+      }
+      
+      window.performanceChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Good attendance – Excellent participation (<3 absences)', 'Warning – attendance low – You need to participate more(3-4 absences)', 'Excluded – too many absences – You need to participate more (5+ absences)'],
+          datasets: [{
+            data: [excellent, warning, risk],
+            backgroundColor: [
+              'rgba(40, 167, 69, 0.7)',
+              'rgba(255, 193, 7, 0.7)',
+              'rgba(220, 53, 69, 0.7)'
+            ],
+            borderColor: [
+              'rgb(40, 167, 69)',
+              'rgb(255, 193, 7)',
+              'rgb(220, 53, 69)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            title: {
+              display: true,
+              text: 'Student Performance Distribution'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    /* -------------------------
+       Initialize Application
+       ------------------------- */
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load current teacher if exists
+      const storedTeacher = localStorage.getItem('currentTeacher');
+      if (storedTeacher) {
+        currentTeacher = JSON.parse(storedTeacher);
+        // Pre-fill teacher form
+        document.getElementById('teacherId').value = currentTeacher.id || '';
+        document.getElementById('teacherLast').value = currentTeacher.lastName || '';
+        document.getElementById('teacherFirst').value = currentTeacher.firstName || '';
+        document.getElementById('teacherEmail').value = currentTeacher.email || '';
+        document.getElementById('teacherModule').value = currentTeacher.module || '';
+        document.getElementById('sessionDate').value = currentTeacher.sessionDate || '';
+        
+        // Initialize default students for this teacher
+        initializeDefaultStudents(currentTeacher.id);
+      }
+      
+      // Set today's date as default for session date
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('sessionDate').value = today;
+    });
+
+    // Row click shows student info (but ignore clicks on checkboxes and selects)
+    $(document).on("click", "#attendanceTable tbody tr", function(event){
+      if($(event.target).is("input[type='checkbox']") || $(event.target).is("select")) return;
+      const last = $(this).find("td:nth-child(1)").text().trim();
+      const first = $(this).find("td:nth-child(2)").text().trim();
+      const abs = $(this).find("td:nth-last-child(3)").text().trim();
+      const part = $(this).find("td:nth-last-child(2)").text().trim();
+      const status = $(this).find("td:last-child").text().trim();
+      alert(`Student: ${first} ${last}\nAbsences: ${abs}\nParticipation: ${part}\nStatus: ${status}`);
+    });
+
+    // Save data when user leaves page
+    window.addEventListener("beforeunload", () => {
+      if(currentTeacher) {
+        localStorage.setItem("currentTeacher", JSON.stringify(currentTeacher));
+      }
+    });
+  </script>
+</body>
+</html>
